@@ -1,6 +1,7 @@
 package com.example.taskhive.controller;
 
 import com.example.taskhive.entity.User;
+import com.example.taskhive.exception.InvalidInputException;
 import com.example.taskhive.service.UserService;
 import com.example.taskhive.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +33,13 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody User loginUser) {
         // Find the user from the database
+        if (loginUser.getUsername() == null || loginUser.getUsername().isEmpty()) {
+            throw new InvalidInputException("Username is required");
+        }
+
+        if (loginUser.getPassword() == null || loginUser.getPassword().isEmpty()) {
+            throw new InvalidInputException("Password is required");
+        }
         User user = userService.getUserByUsername(loginUser.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -55,6 +62,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
+        if (user.getUsername() == null || user.getUsername().isEmpty()) {
+            throw new InvalidInputException("Username is required");
+        }
+
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new InvalidInputException("Password is required");
+        }
         // Encode the password before saving it
         user.setPassword(passwordEncoder.encode(user.getPassword()));  // Encrypt the password
         User newUser = userService.createUser(user);  // Save the user with the encoded password
